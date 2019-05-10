@@ -42,6 +42,17 @@ private:
 
 	int linesSkipped;
 
+	int xIndex = -1;
+    int yIndex = -1;
+    int zIndex = -1;
+    int iIndex = -1;
+    int rIndex = -1;
+    int gIndex = -1;
+    int bIndex = -1;
+    int XIndex = -1;
+    int YIndex = -1;
+    int ZIndex = -1;
+
 public:
 	XYZPointReader(string file, string format, vector<double> colorRange, vector<double> intensityRange)
 	: stream(file, std::ios::in | std::ios::binary)
@@ -128,6 +139,8 @@ public:
 
 		}
 
+        setupIndexes();
+
 		// read through once to calculate aabb and number of points
 		while(readNextPoint()){
 			Point p = getPoint();
@@ -166,33 +179,26 @@ public:
 				continue;
 			}
 
-			int i = 0;
-			for(const auto &f : format) {
-				string token = tokens[i++];
-				if(f == 'x'){
-					x = stod(token);
-				}else if(f == 'y'){
-					y = stod(token);
-				}else if(f == 'z'){
-					z = stod(token);
-				}else if(f == 'r'){
-					r = (unsigned char)(255.0f * (stof(token) - colorOffset) / colorScale); 
-				}else if(f == 'g'){
-					g = (unsigned char)(255.0f * (stof(token) - colorOffset) / colorScale); 
-				}else if(f == 'b'){
-					b = (unsigned char)(255.0f * (stof(token) - colorOffset) / colorScale); 
-				}else if(f == 'i'){
-					intensity = (unsigned short)( 65535 * (stof(token) - intensityOffset) / intensityScale);
-				}else if(f == 's'){
-					// skip
-				}else if(f == 'X'){
-					nx = stof(token);
-				}else if(f == 'Y'){
-					ny = stof(token);
-				}else if(f == 'Z'){
-					nz = stof(token);
-				}
-			}
+			if(this->xIndex > -1)
+                x = stod(tokens[this->xIndex]);
+            if(this->yIndex > -1)
+                y = stod(tokens[this->yIndex]);
+            if(this->zIndex > -1)
+                z = stod(tokens[this->zIndex]);
+            if(this->rIndex > -1)
+             r = (unsigned char)(255.0f * (stof(tokens[this->rIndex]) - colorOffset) / colorScale);
+            if(this->gIndex > -1)
+                g = (unsigned char)(255.0f * (stof(tokens[this->gIndex]) - colorOffset) / colorScale);
+            if(this->bIndex > -1)
+                b = (unsigned char)(255.0f * (stof(tokens[this->bIndex]) - colorOffset) / colorScale);
+            if(this->iIndex > -1)
+                intensity = (unsigned short)( 65535 * (stof(tokens[this->iIndex]) - intensityOffset) / intensityScale);
+            if(this->XIndex > -1)
+                nx = stof(tokens[this->XIndex]);
+            if(this->YIndex > -1)
+                ny = stof(tokens[this->YIndex]);
+            if(this->ZIndex > -1)
+                nz = stof(tokens[this->ZIndex]);
 
 			point = Point(x,y,z,r,g,b);
 			point.normal.x = nx;
@@ -218,6 +224,36 @@ public:
 	}
 	void close(){
 		stream.close();
+	}
+
+	void setupIndexes() {
+	    int i = 0;
+        for(const auto &f : format) {
+            if(f == 'x'){
+                this->xIndex = i;
+            }else if(f == 'y'){
+                this->yIndex = i;
+            }else if(f == 'z'){
+                this->zIndex = i;
+            }else if(f == 'r'){
+                this->rIndex = i;
+            }else if(f == 'g'){
+                this->gIndex = i;
+            }else if(f == 'b'){
+                this->bIndex = i;
+            }else if(f == 'i'){
+                this->iIndex = i;
+            }else if(f == 's'){
+                // skip
+            }else if(f == 'X'){
+                this->XIndex = i;
+            }else if(f == 'Y'){
+                this->YIndex = i;
+            }else if(f == 'Z'){
+                this->ZIndex = i;
+            }
+            i++;
+        }
 	}
 };
 
