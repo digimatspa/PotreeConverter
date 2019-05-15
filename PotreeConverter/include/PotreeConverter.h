@@ -11,9 +11,11 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 using std::vector;
 using std::string;
+using std::map;
 
 namespace Potree{
 
@@ -32,6 +34,7 @@ private:
 	void prepare();
 	AABB calculateAABB();
 	void generatePage(string name);
+	map<string, PointReader*> readerMap;
 
 public:
 	float spacing;
@@ -62,6 +65,8 @@ public:
     PotreeConverter(string executablePath, string workDir, vector<string> sources);
 		
 	void convert();
+
+	~PotreeConverter();
 
 };
 

@@ -45,6 +45,8 @@ private:
 
     bool doReadNextPoint();
 
+    void reset();
+
 public:
 
     PTXPointReader(string path);

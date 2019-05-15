@@ -50,28 +50,43 @@ namespace fs = std::experimental::filesystem;
 namespace Potree{
 
 PointReader *PotreeConverter::createPointReader(string path, PointAttributes pointAttributes){
-	PointReader *reader = NULL;
-	if(iEndsWith(path, ".las") || iEndsWith(path, ".laz")){
-		reader = new LASPointReader(path);
-	}else if(iEndsWith(path, ".ptx")){
-		reader = new PTXPointReader(path);
-	}else if(iEndsWith(path, ".ply")){
-		reader = new PlyPointReader(path);
-	}else if(iEndsWith(path, ".xyz") || iEndsWith(path, ".txt")){
-		reader = new XYZPointReader(path, format, colorRange, intensityRange);
-	}else if(iEndsWith(path, ".pts")){
-		vector<double> intensityRange;
 
-		if(this->intensityRange.size() == 0){
-				intensityRange.push_back(-2048);
-				intensityRange.push_back(+2047);
-		}
+    map<string, PointReader*>::iterator itr =  this->readerMap.find(path);
 
-		reader = new XYZPointReader(path, format, colorRange, intensityRange);
- 	}else if(iEndsWith(path, ".bin")){
-		reader = new BINPointReader(path, aabb, scale, pointAttributes);
-	}
+    PointReader *reader = NULL;
 
+    if(itr == this->readerMap.end()){
+        // Reader not found
+
+        if(iEndsWith(path, ".las") || iEndsWith(path, ".laz")){
+            reader = new LASPointReader(path);
+        }else if(iEndsWith(path, ".ptx")){
+            reader = new PTXPointReader(path);
+        }else if(iEndsWith(path, ".ply")){
+            reader = new PlyPointReader(path);
+        }else if(iEndsWith(path, ".xyz") || iEndsWith(path, ".txt")){
+            reader = new XYZPointReader(path, format, colorRange, intensityRange);
+        }else if(iEndsWith(path, ".pts")){
+            vector<double> intensityRange;
+
+            if(this->intensityRange.size() == 0){
+                    intensityRange.push_back(-2048);
+                    intensityRange.push_back(+2047);
+            }
+
+            reader = new XYZPointReader(path, format, colorRange, intensityRange);
+
+        }else if(iEndsWith(path, ".bin")){
+            reader = new BINPointReader(path, aabb, scale, pointAttributes);
+        }
+
+        if(reader != NULL){
+            this->readerMap[path] = reader;
+        }
+    } else {
+        reader = itr->second;
+        reader->reset();
+    }
 	return reader;
 }
 
@@ -147,8 +162,8 @@ AABB PotreeConverter::calculateAABB(){
 			aabb.update(lAABB.min);
 			aabb.update(lAABB.max);
 
-			reader->close();
-			delete reader;
+			//reader->close();
+			//delete reader;
 		}
 	}
 
@@ -417,8 +432,8 @@ void PotreeConverter::convert(){
 
 		writeSources(this->workDir, sourceFilenames, numPoints, boundingBoxes, this->projection);
 		if(this->sourceListingOnly){
-			reader->close();
-			delete reader;
+			//reader->close();
+			//delete reader;
 
 			continue;
 		}
@@ -465,8 +480,8 @@ void PotreeConverter::convert(){
 			//	break;
 			//}
 		}
-		reader->close();
-		delete reader;
+		//reader->close();
+		//delete reader;
 
 		
 	}
@@ -491,4 +506,13 @@ void PotreeConverter::convert(){
 	cout << "duration: " << (duration / 1000.0f) << "s" << endl;
 }
 
+PotreeConverter::~PotreeConverter() {
+    //delete all readers contained in the reader map
+    map<string, PointReader*>::iterator itr;
+    for (itr = this->readerMap.begin(); itr != this->readerMap.end(); ++itr) {
+             delete itr->second;
+    }
 }
+}
+
+

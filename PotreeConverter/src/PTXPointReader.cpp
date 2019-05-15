@@ -262,4 +262,15 @@ bool PTXPointReader::doReadNextPoint() {
     return true;
 }
 
+    void PTXPointReader::reset(){
+        close();
+        // open first file
+        // open first file
+        this->currentFile = files.begin();
+        this->stream = new fstream(*(this->currentFile), ios::in);
+        this->currentChunk = 0;
+        skipline(*this->stream);
+        loadChunk(this->stream, this->currentChunk, this->tr);
+    }
+
 }

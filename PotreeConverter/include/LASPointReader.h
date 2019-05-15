@@ -157,6 +157,8 @@ public:
 
 	void close();
 
+	void reset();
+
 	Vector3<double> getScale();
 };
 

@@ -81,6 +81,13 @@ void LASPointReader::close(){
 	}
 }
 
+void LASPointReader::reset(){
+   close();
+    // open first file
+    currentFile = files.begin();
+    reader = new LIBLASReader(*currentFile);
+}
+
 long long LASPointReader::numPoints(){
 	if (reader->header->version_major >= 1 && reader->header->version_minor >= 4) {
 		return reader->header->extended_number_of_point_records;

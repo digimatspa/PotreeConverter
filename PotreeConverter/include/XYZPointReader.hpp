@@ -226,6 +226,11 @@ public:
 		stream.close();
 	}
 
+	void reset(){
+        stream.clear();
+        stream.seekg(0, stream.beg);
+	}
+
 	void setupIndexes() {
 	    int i = 0;
         for(const auto &f : format) {

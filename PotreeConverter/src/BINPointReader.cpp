@@ -53,6 +53,14 @@ void BINPointReader::close(){
 	}
 }
 
+
+void BINPointReader::reset(){
+    close();
+    // open first file
+    currentFile = files.begin();
+    reader = new ifstream(*currentFile, ios::in | ios::binary);
+}
+
 long long BINPointReader::numPoints(){
 	//TODO
 

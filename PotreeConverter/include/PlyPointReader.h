@@ -101,64 +101,68 @@ public:
 	PlyPointReader(string file)
 	: stream(file, std::ios::in | std::ios::binary)
 	,vertexElement("vertexElement"){
-		format = -1;
-		pointCount = 0;
-		pointsRead = 0;
-		pointByteSize = 0;
-		buffer = new char[100];
-		aabb = NULL;
-		this->file = file;
+	    format = -1;
+        pointCount = 0;
+        pointsRead = 0;
+        pointByteSize = 0;
+        buffer = new char[100];
+        aabb = NULL;
+	    PlyPointReader::file = file;
+        initialize();
+    }
 
-		std::regex rEndHeader("^end_header.*");
-		std::regex rFormat("^format (ascii|binary_little_endian).*");
-		std::regex rElement("^element (\\w*) (\\d*)");
-		std::regex rProperty("^property (char|int8|uchar|uint8|short|int16|ushort|uint16|int|int32|uint|uint32|float|float32|double|float64) (\\w*)");
-		
-		string line;
-		while(std::getline(stream, line)){
-			line = trim(line);
+    void initialize() {
+        std::regex rEndHeader("^end_header.*");
+        std::regex rFormat("^format (ascii|binary_little_endian).*");
+        std::regex rElement("^element (\\w*) (\\d*)");
+        std::regex rProperty(
+                "^property (char|int8|uchar|uint8|short|int16|ushort|uint16|int|int32|uint|uint32|float|float32|double|float64) (\\w*)");
 
-			std::cmatch sm;
-			if(std::regex_match(line, rEndHeader)){
-				// stop line parsing when end_header is encountered
-				break;
-			}else if(std::regex_match(line.c_str(), sm, rFormat)){
-				// parse format
-				string f = sm[1];
-				if(f == "ascii"){
-					format = PLY_FILE_FORMAT_ASCII;
-				}else if(f == "binary_little_endian"){
-					format = PLY_FILE_FORMAT_BINARY_LITTLE_ENDIAN;
-				}
-			}else if(std::regex_match(line.c_str(), sm, rElement)){
-				// parse vertex element declaration
-				string name = sm[1];
-				long count = atol(string(sm[2]).c_str());
+        string line;
+        while (std::getline(stream, line)) {
+            line = trim(line);
 
-				if(name != "vertex"){
-					continue;
-				}
-				pointCount = count;
+            std::cmatch sm;
+            if (std::regex_match(line, rEndHeader)) {
+                // stop line parsing when end_header is encountered
+                break;
+            } else if (std::regex_match(line.c_str(), sm, rFormat)) {
+                // parse format
+                string f = sm[1];
+                if (f == "ascii") {
+                    format = PLY_FILE_FORMAT_ASCII;
+                } else if (f == "binary_little_endian") {
+                    format = PLY_FILE_FORMAT_BINARY_LITTLE_ENDIAN;
+                }
+            } else if (std::regex_match(line.c_str(), sm, rElement)) {
+                // parse vertex element declaration
+                string name = sm[1];
+                long count = atol(string(sm[2]).c_str());
 
-				while(true){
-					std::streamoff len = stream.tellg();
-					getline(stream, line);
-					line = trim(line);
-					if(std::regex_match(line.c_str(), sm, rProperty)){
-						string name = sm[2];
-						PlyPropertyType type = plyPropertyTypes[sm[1]];
-						PlyProperty property(name, type);
-						vertexElement.properties.push_back(property);
-						pointByteSize += type.size;
-					}else{
-						// abort if line was not a property definition
-						stream.seekg(len ,std::ios_base::beg);
-						break;
-					}
-				}
-			}
-		}
-	}
+                if (name != "vertex") {
+                    continue;
+                }
+                pointCount = count;
+
+                while (true) {
+                    std::streamoff len = stream.tellg();
+                    getline(stream, line);
+                    line = trim(line);
+                    if (std::regex_match(line.c_str(), sm, rProperty)) {
+                        string name = sm[2];
+                        PlyPropertyType type = plyPropertyTypes[sm[1]];
+                        PlyProperty property(name, type);
+                        vertexElement.properties.push_back(property);
+                        pointByteSize += type.size;
+                    } else {
+                        // abort if line was not a property definition
+                        stream.seekg(len, std::ios_base::beg);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 	bool readNextPoint(){
 		if(pointsRead == pointCount){
@@ -292,6 +296,16 @@ public:
 		stream.close();
 	}
 
+    void reset(){
+	    pointsRead = 0;
+        stream.clear();
+        stream.seekg (0, ios::beg);
+
+        pointByteSize= 0;
+        vertexElement.size = 0;
+        vertexElement.properties.clear();
+         initialize();
+    }
 
 };
 

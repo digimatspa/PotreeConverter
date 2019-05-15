@@ -26,6 +26,8 @@ public:
 	virtual long long numPoints() = 0;
 
 	virtual void close() = 0;
+
+    virtual void reset() = 0;
 };
 
 }
